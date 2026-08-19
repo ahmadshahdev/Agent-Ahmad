@@ -1,5 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, Tool } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
@@ -7,165 +6,124 @@ dotenv.config();
 
 export interface ChatMessage {
   role: "user" | "assistant";
-  content: string | Anthropic.ContentBlockParam[];
+  content: string;
 }
 
-export interface LLMStreamOptions {
+export interface GeminiLLMOptions {
   messages: ChatMessage[];
   systemPrompt?: string;
   model?: string;
-  maxTokens?: number;
   temperature?: number;
-  tools?: Anthropic.Tool[];
+  tools?: Tool[];
 }
 
-export interface ToolUseCall {
-  id: string;
+export interface GeminiToolCall {
   name: string;
-  input: unknown;
+  args: Record<string, unknown>;
 }
 
-export interface LLMToolResponse {
+export interface GeminiLLMResponse {
   type: "tool_use" | "text";
-  toolCall?: ToolUseCall;
+  toolCall?: GeminiToolCall;
   text?: string;
-  rawContent: Anthropic.ContentBlock[];
 }
 
-function resolveModel(inputModel?: string): string {
-  const envModel = process.env.ANTHROPIC_MODEL;
-  const rawModel = inputModel || envModel || "claude-3-7-sonnet-20250219";
+const CANDIDATE_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-3.6-flash",
+  "gemini-flash-latest",
+  "gemini-1.5-flash",
+  "gemini-2.0-flash-exp",
+];
 
-  if (rawModel === "claude-sonnet-4-6") {
-    return "claude-3-7-sonnet-20250219";
+/**
+ * Validates and retrieves the GEMINI_API_KEY from environment variables.
+ */
+function getGeminiApiKey(): string {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error("❌ Missing GEMINI_API_KEY");
   }
-
-  return rawModel;
+  return apiKey.trim();
 }
 
 /**
- * Executes initial LLM turn with tools enabled to detect if tool call is needed.
+ * Resolves the candidate list of models to try, placing user/env preference first.
+ */
+function getModelCandidateList(inputModel?: string): string[] {
+  const envModel = process.env.GEMINI_MODEL;
+  const preferred = inputModel || envModel || "gemini-2.5-flash";
+
+  return Array.from(new Set([preferred, ...CANDIDATE_MODELS]));
+}
+
+/**
+ * Executes initial turn with Google Gemini with multi-model fallback resilience.
  */
 export async function invokeLLMWithTools(
-  options: LLMStreamOptions
-): Promise<LLMToolResponse> {
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
+  options: GeminiLLMOptions
+): Promise<GeminiLLMResponse> {
+  const apiKey = getGeminiApiKey();
+  const modelsToTry = getModelCandidateList(options.model);
 
-  if (!anthropicKey && !geminiKey) {
-    throw new Error(
-      "❌ Missing API Keys. Please add GEMINI_API_KEY or ANTHROPIC_API_KEY to your .env.local file."
-    );
-  }
+  let lastError: unknown;
 
-  // Use Anthropic if Key is available
-  if (anthropicKey) {
-    const anthropic = new Anthropic({ apiKey: anthropicKey });
-    const model = resolveModel(options.model);
-
+  for (const modelName of modelsToTry) {
     try {
-      const response = await anthropic.messages.create({
-        model,
-        max_tokens: options.maxTokens || 1024,
-        temperature: options.temperature ?? 0.7,
-        system: options.systemPrompt,
-        messages: options.messages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        tools: options.tools,
-      });
-
-      if (response.stop_reason === "tool_use") {
-        const toolBlock = response.content.find(
-          (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
-        );
-
-        if (toolBlock) {
-          return {
-            type: "tool_use",
-            toolCall: {
-              id: toolBlock.id,
-              name: toolBlock.name,
-              input: toolBlock.input,
-            },
-            rawContent: response.content,
-          };
-        }
-      }
-
-      const textContent = response.content
-        .filter((block): block is Anthropic.TextBlock => block.type === "text")
-        .map((block) => block.text)
-        .join("\n");
-
-      return {
-        type: "text",
-        text: textContent,
-        rawContent: response.content,
-      };
-    } catch (error: unknown) {
-      console.error("❌ Anthropic LLM Error:", error);
-      const errObj = error as { message?: string };
-      throw new Error(errObj?.message || "Failed to communicate with Anthropic API.");
-    }
-  }
-
-  // Fallback to Google Gemini
-  if (geminiKey) {
-    try {
-      const genAI = new GoogleGenerativeAI(geminiKey);
-      const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: modelName,
         systemInstruction: options.systemPrompt,
+        tools: options.tools,
       });
 
       const lastMessage = options.messages[options.messages.length - 1];
-      const userPrompt =
-        typeof lastMessage?.content === "string"
-          ? lastMessage.content
-          : JSON.stringify(lastMessage?.content);
+      const userPrompt = lastMessage?.content || "";
 
       const result = await model.generateContent(userPrompt);
-      const responseText = result.response.text();
+      const response = result.response;
+      const functionCalls = response.functionCalls();
+
+      if (functionCalls && functionCalls.length > 0) {
+        const call = functionCalls[0];
+        return {
+          type: "tool_use",
+          toolCall: {
+            name: call.name,
+            args: (call.args as Record<string, unknown>) || {},
+          },
+        };
+      }
 
       return {
         type: "text",
-        text: responseText,
-        rawContent: [],
+        text: response.text(),
       };
     } catch (error: unknown) {
-      console.error("❌ Gemini LLM Error:", error);
-      const errObj = error as { message?: string };
-      throw new Error(errObj?.message || "Failed to communicate with Google Gemini API.");
+      console.warn(`⚠️ Gemini invocation failed on model '${modelName}', trying candidate fallback:`, error);
+      lastError = error;
     }
   }
 
-  throw new Error("No valid LLM API key provided.");
+  console.error("❌ All candidate Google Gemini models failed (invokeLLMWithTools).");
+  const errObj = lastError as { message?: string };
+  throw new Error(errObj?.message || "Failed to communicate with Google Gemini API across all model candidates.");
 }
 
 /**
- * Streams text responses from Claude API or Gemini API.
- * Yields individual text tokens as an AsyncGenerator.
+ * Streams text responses from Google Gemini API with multi-model fallback.
  */
 export async function* streamLLMResponse(
-  options: LLMStreamOptions
+  options: GeminiLLMOptions
 ): AsyncGenerator<string, void, unknown> {
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const apiKey = getGeminiApiKey();
+  const modelsToTry = getModelCandidateList(options.model);
 
-  if (!anthropicKey && !geminiKey) {
-    throw new Error(
-      "❌ Missing API Keys. Please add GEMINI_API_KEY or ANTHROPIC_API_KEY to your .env.local file."
-    );
-  }
+  let lastError: unknown;
 
-  // 1. Google Gemini Streaming Option
-  if (geminiKey) {
+  for (const modelName of modelsToTry) {
     try {
-      const genAI = new GoogleGenerativeAI(geminiKey);
-      const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: modelName,
         systemInstruction: options.systemPrompt,
@@ -173,21 +131,11 @@ export async function* streamLLMResponse(
 
       const history = options.messages.slice(0, -1).map((msg) => ({
         role: msg.role === "assistant" ? "model" : "user",
-        parts: [
-          {
-            text:
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content),
-          },
-        ],
+        parts: [{ text: msg.content }],
       }));
 
       const lastMessage = options.messages[options.messages.length - 1];
-      const userPrompt =
-        typeof lastMessage?.content === "string"
-          ? lastMessage.content
-          : JSON.stringify(lastMessage?.content);
+      const userPrompt = lastMessage?.content || "";
 
       const chat = model.startChat({ history });
       const result = await chat.sendMessageStream(userPrompt);
@@ -197,43 +145,12 @@ export async function* streamLLMResponse(
       }
       return;
     } catch (error: unknown) {
-      console.error("❌ Gemini Streaming Error:", error);
-      const errObj = error as { message?: string };
-      throw new Error(errObj?.message || "Error streaming response from Google Gemini API.");
+      console.warn(`⚠️ Gemini streaming failed on model '${modelName}', trying candidate fallback:`, error);
+      lastError = error;
     }
   }
 
-  // 2. Anthropic Claude Streaming Option
-  if (anthropicKey) {
-    const anthropic = new Anthropic({ apiKey: anthropicKey });
-    const model = resolveModel(options.model);
-
-    try {
-      const stream = await anthropic.messages.create({
-        model,
-        max_tokens: options.maxTokens || 1024,
-        temperature: options.temperature ?? 0.7,
-        system: options.systemPrompt,
-        messages: options.messages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        stream: true,
-      });
-
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          yield chunk.delta.text;
-        }
-      }
-      return;
-    } catch (error: unknown) {
-      console.error("❌ Anthropic Streaming Error:", error);
-      const errObj = error as { message?: string };
-      throw new Error(errObj?.message || "Error streaming response from Claude API.");
-    }
-  }
+  console.error("❌ All candidate Google Gemini models failed (streamLLMResponse).");
+  const errObj = lastError as { message?: string };
+  throw new Error(errObj?.message || "Error streaming response from Google Gemini API.");
 }

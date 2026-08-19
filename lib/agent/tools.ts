@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { SchemaType, Tool } from "@google/generative-ai";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -65,24 +66,28 @@ export async function getLatestGithubActivity(limit = 5): Promise<GithubRepo[]> 
 }
 
 /**
- * Anthropic Tool definition for getLatestGithubActivity tool.
+ * Google Gemini Tool definition for getLatestGithubActivity function calling.
  */
-export const GITHUB_ACTIVITY_TOOL = {
-  name: "getLatestGithubActivity",
-  description: "Fetches Ahmad's most recently updated public GitHub repositories and live coding activity.",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      limit: {
-        type: "integer",
-        description: "Number of recently updated repositories to fetch (default: 5, max: 10).",
+export const GITHUB_ACTIVITY_GEMINI_TOOL: Tool = {
+  functionDeclarations: [
+    {
+      name: "getLatestGithubActivity",
+      description:
+        "Fetches Ahmad's most recently updated public GitHub repositories and live coding activity.",
+      parameters: {
+        type: SchemaType.OBJECT,
+        properties: {
+          limit: {
+            type: SchemaType.NUMBER,
+            description: "Number of recently updated repositories to fetch (default: 5, max: 10).",
+          },
+        },
       },
     },
-    required: [],
-  },
+  ],
 };
 
-export const ALL_AGENT_TOOLS = [GITHUB_ACTIVITY_TOOL];
+export const ALL_GEMINI_TOOLS: Tool[] = [GITHUB_ACTIVITY_GEMINI_TOOL];
 
 /**
  * Dispatches and executes agent tool calls server-side.

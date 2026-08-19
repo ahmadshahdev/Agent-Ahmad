@@ -182,13 +182,16 @@ export default function ChatWidget() {
       );
     } catch (error: unknown) {
       console.error("❌ Chat streaming error:", error);
+      const errMsg =
+        error instanceof Error
+          ? error.message
+          : "Encountered an issue communicating with the AI service. Please check your API keys in .env.local.";
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantMessageId
             ? {
                 ...msg,
-                content:
-                  "I apologize, but I encountered a connection issue while answering your query. Please try again or reach out to Ahmad directly!",
+                content: `⚠️ **Agent Error:** ${errMsg}`,
                 isStreaming: false,
               }
             : msg

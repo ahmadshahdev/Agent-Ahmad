@@ -24,14 +24,27 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
       async start(controller) {
+        let isClosed = false;
         try {
           for await (const chunk of stream) {
-            controller.enqueue(encoder.encode(chunk));
+            if (!isClosed) {
+              controller.enqueue(encoder.encode(chunk));
+            }
           }
-          controller.close();
+          if (!isClosed) {
+            isClosed = true;
+            controller.close();
+          }
         } catch (err: unknown) {
           console.error("❌ Error while streaming agent response:", err);
-          controller.error(err);
+          if (!isClosed) {
+            isClosed = true;
+            try {
+              controller.error(err);
+            } catch {
+              // Ignore controller error if already closed
+            }
+          }
         }
       },
     });
