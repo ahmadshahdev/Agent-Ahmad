@@ -6,7 +6,7 @@ dotenv.config();
 
 export interface ChatMessage {
   role: "user" | "assistant";
-  content: string | any[];
+  content: string | Anthropic.ContentBlockParam[];
 }
 
 export interface LLMStreamOptions {
@@ -15,20 +15,20 @@ export interface LLMStreamOptions {
   model?: string;
   maxTokens?: number;
   temperature?: number;
-  tools?: any[];
+  tools?: Anthropic.Tool[];
 }
 
 export interface ToolUseCall {
   id: string;
   name: string;
-  input: any;
+  input: unknown;
 }
 
 export interface LLMToolResponse {
   type: "tool_use" | "text";
   toolCall?: ToolUseCall;
   text?: string;
-  rawContent: any[];
+  rawContent: Anthropic.ContentBlock[];
 }
 
 function resolveModel(inputModel?: string): string {
@@ -74,8 +74,8 @@ export async function invokeLLMWithTools(
 
     if (response.stop_reason === "tool_use") {
       const toolBlock = response.content.find(
-        (block: any) => block.type === "tool_use"
-      ) as any;
+        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
+      );
 
       if (toolBlock) {
         return {
@@ -92,8 +92,8 @@ export async function invokeLLMWithTools(
 
     // Extract text blocks if not tool_use
     const textContent = response.content
-      .filter((block: any) => block.type === "text")
-      .map((block: any) => block.text)
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
       .join("\n");
 
     return {
@@ -101,16 +101,17 @@ export async function invokeLLMWithTools(
       text: textContent,
       rawContent: response.content,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Anthropic LLM Client Error (invokeLLMWithTools):", error);
+    const errObj = error as { status?: number; message?: string };
 
-    if (error?.status === 429) {
+    if (errObj?.status === 429) {
       throw new Error("Rate limit exceeded on Claude API. Please wait a moment before trying again.");
-    } else if (error?.status === 401) {
+    } else if (errObj?.status === 401) {
       throw new Error("Invalid ANTHROPIC_API_KEY. Please verify your API key.");
     }
 
-    throw new Error(error?.message || "An unexpected error occurred while communicating with Claude API.");
+    throw new Error(errObj?.message || "An unexpected error occurred while communicating with Claude API.");
   }
 }
 
@@ -153,15 +154,16 @@ export async function* streamLLMResponse(
         yield chunk.delta.text;
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Anthropic LLM Client Error (streamLLMResponse):", error);
+    const errObj = error as { status?: number; message?: string };
 
-    if (error?.status === 429) {
+    if (errObj?.status === 429) {
       throw new Error("Rate limit exceeded on Claude API. Please wait a moment before trying again.");
-    } else if (error?.status === 401) {
+    } else if (errObj?.status === 401) {
       throw new Error("Invalid ANTHROPIC_API_KEY. Please verify your API key.");
     }
 
-    throw new Error(error?.message || "An unexpected error occurred while communicating with Claude API.");
+    throw new Error(errObj?.message || "An unexpected error occurred while communicating with Claude API.");
   }
 }

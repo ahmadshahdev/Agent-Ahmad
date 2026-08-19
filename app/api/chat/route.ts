@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runAgent } from "@/lib/agent/runAgent";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
             controller.enqueue(encoder.encode(chunk));
           }
           controller.close();
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("❌ Error while streaming agent response:", err);
           controller.error(err);
         }
@@ -41,10 +43,11 @@ export async function POST(req: NextRequest) {
         "X-Sources": JSON.stringify(sources),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
     console.error("❌ Error in chat API route handler:", error);
     return NextResponse.json(
-      { error: error?.message || "Internal Server Error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

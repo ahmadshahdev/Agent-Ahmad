@@ -13,6 +13,16 @@ export interface GithubRepo {
   forks: number;
 }
 
+interface RawGithubRepo {
+  name: string;
+  description?: string | null;
+  language?: string | null;
+  updated_at: string;
+  html_url: string;
+  stargazers_count?: number;
+  forks_count?: number;
+}
+
 /**
  * Fetches Ahmad's most recently updated public GitHub repositories from GitHub REST API.
  */
@@ -32,13 +42,13 @@ export async function getLatestGithubActivity(limit = 5): Promise<GithubRepo[]> 
       throw new Error(`GitHub API returned status ${res.status}: ${res.statusText}`);
     }
 
-    const repos = await res.json();
+    const repos = (await res.json()) as RawGithubRepo[];
 
     if (!Array.isArray(repos)) {
       throw new Error("Invalid response format from GitHub API.");
     }
 
-    return repos.map((repo: any) => ({
+    return repos.map((repo) => ({
       name: repo.name,
       description: repo.description || "No description provided.",
       language: repo.language || "Unknown",
@@ -47,9 +57,10 @@ export async function getLatestGithubActivity(limit = 5): Promise<GithubRepo[]> 
       stars: repo.stargazers_count ?? 0,
       forks: repo.forks_count ?? 0,
     }));
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error("❌ Error fetching GitHub activity:", error);
-    throw new Error(`Failed to fetch GitHub activity for username '${username}': ${error?.message || error}`);
+    throw new Error(`Failed to fetch GitHub activity for username '${username}': ${errMsg}`);
   }
 }
 
@@ -76,9 +87,10 @@ export const ALL_AGENT_TOOLS = [GITHUB_ACTIVITY_TOOL];
 /**
  * Dispatches and executes agent tool calls server-side.
  */
-export async function executeTool(name: string, input: any): Promise<any> {
+export async function executeTool(name: string, input: unknown): Promise<unknown> {
   if (name === "getLatestGithubActivity") {
-    const limit = typeof input?.limit === "number" ? input.limit : 5;
+    const inputObj = input as { limit?: number } | null | undefined;
+    const limit = typeof inputObj?.limit === "number" ? inputObj.limit : 5;
     return await getLatestGithubActivity(limit);
   }
   throw new Error(`Unknown tool requested: ${name}`);

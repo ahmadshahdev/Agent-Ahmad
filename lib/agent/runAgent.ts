@@ -112,11 +112,12 @@ User Query: ${message}`;
       }
 
       // Execute tool server-side
-      let toolResultData: any;
+      let toolResultData: unknown;
       try {
         toolResultData = await executeTool(toolCall.name, toolCall.input);
-      } catch (err: any) {
-        toolResultData = { error: err?.message || "Failed to execute tool" };
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : "Failed to execute tool";
+        toolResultData = { error: errMsg };
       }
 
       // Update message history with tool use and tool result

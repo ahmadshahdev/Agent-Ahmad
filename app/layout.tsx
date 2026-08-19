@@ -3,6 +3,7 @@ import { fontHeading, fontBody } from "@/lib/fonts";
 import { siteConfig } from "@/config/site";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import ChatWidget from "@/components/ChatWidget";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -35,6 +36,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <ChatWidget />
       </body>
     </html>
   );

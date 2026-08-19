@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLatestGithubActivity } from "@/lib/agent/tools";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -16,10 +18,11 @@ export async function GET(req: NextRequest) {
       repos,
       fetchedAt: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to fetch GitHub activity";
     console.error("❌ Error in /api/github route:", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to fetch GitHub activity" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
