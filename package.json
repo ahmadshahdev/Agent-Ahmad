@@ -8,9 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "ingest": "tsx scripts/ingest.ts",
-    "test:retrieval": "tsx scripts/test-retrieval.ts"
+    "test:retrieval": "tsx scripts/test-retrieval.ts",
+    "test:agent": "tsx scripts/test-agent.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "chromadb": "^3.5.0",
     "dotenv": "^17.4.2",
     "gray-matter": "^4.0.3",
