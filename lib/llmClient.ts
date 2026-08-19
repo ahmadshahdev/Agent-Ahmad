@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
@@ -48,122 +49,191 @@ function resolveModel(inputModel?: string): string {
 export async function invokeLLMWithTools(
   options: LLMStreamOptions
 ): Promise<LLMToolResponse> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) {
+  if (!anthropicKey && !geminiKey) {
     throw new Error(
-      "❌ Missing ANTHROPIC_API_KEY. Please add ANTHROPIC_API_KEY to your .env.local file."
+      "❌ Missing API Keys. Please add GEMINI_API_KEY or ANTHROPIC_API_KEY to your .env.local file."
     );
   }
 
-  const anthropic = new Anthropic({ apiKey });
-  const model = resolveModel(options.model);
+  // Use Anthropic if Key is available
+  if (anthropicKey) {
+    const anthropic = new Anthropic({ apiKey: anthropicKey });
+    const model = resolveModel(options.model);
 
-  try {
-    const response = await anthropic.messages.create({
-      model,
-      max_tokens: options.maxTokens || 1024,
-      temperature: options.temperature ?? 0.7,
-      system: options.systemPrompt,
-      messages: options.messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      })),
-      tools: options.tools,
-    });
+    try {
+      const response = await anthropic.messages.create({
+        model,
+        max_tokens: options.maxTokens || 1024,
+        temperature: options.temperature ?? 0.7,
+        system: options.systemPrompt,
+        messages: options.messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+        tools: options.tools,
+      });
 
-    if (response.stop_reason === "tool_use") {
-      const toolBlock = response.content.find(
-        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
-      );
+      if (response.stop_reason === "tool_use") {
+        const toolBlock = response.content.find(
+          (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
+        );
 
-      if (toolBlock) {
-        return {
-          type: "tool_use",
-          toolCall: {
-            id: toolBlock.id,
-            name: toolBlock.name,
-            input: toolBlock.input,
-          },
-          rawContent: response.content,
-        };
+        if (toolBlock) {
+          return {
+            type: "tool_use",
+            toolCall: {
+              id: toolBlock.id,
+              name: toolBlock.name,
+              input: toolBlock.input,
+            },
+            rawContent: response.content,
+          };
+        }
       }
+
+      const textContent = response.content
+        .filter((block): block is Anthropic.TextBlock => block.type === "text")
+        .map((block) => block.text)
+        .join("\n");
+
+      return {
+        type: "text",
+        text: textContent,
+        rawContent: response.content,
+      };
+    } catch (error: unknown) {
+      console.error("❌ Anthropic LLM Error:", error);
+      const errObj = error as { message?: string };
+      throw new Error(errObj?.message || "Failed to communicate with Anthropic API.");
     }
-
-    // Extract text blocks if not tool_use
-    const textContent = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === "text")
-      .map((block) => block.text)
-      .join("\n");
-
-    return {
-      type: "text",
-      text: textContent,
-      rawContent: response.content,
-    };
-  } catch (error: unknown) {
-    console.error("❌ Anthropic LLM Client Error (invokeLLMWithTools):", error);
-    const errObj = error as { status?: number; message?: string };
-
-    if (errObj?.status === 429) {
-      throw new Error("Rate limit exceeded on Claude API. Please wait a moment before trying again.");
-    } else if (errObj?.status === 401) {
-      throw new Error("Invalid ANTHROPIC_API_KEY. Please verify your API key.");
-    }
-
-    throw new Error(errObj?.message || "An unexpected error occurred while communicating with Claude API.");
   }
+
+  // Fallback to Google Gemini
+  if (geminiKey) {
+    try {
+      const genAI = new GoogleGenerativeAI(geminiKey);
+      const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: options.systemPrompt,
+      });
+
+      const lastMessage = options.messages[options.messages.length - 1];
+      const userPrompt =
+        typeof lastMessage?.content === "string"
+          ? lastMessage.content
+          : JSON.stringify(lastMessage?.content);
+
+      const result = await model.generateContent(userPrompt);
+      const responseText = result.response.text();
+
+      return {
+        type: "text",
+        text: responseText,
+        rawContent: [],
+      };
+    } catch (error: unknown) {
+      console.error("❌ Gemini LLM Error:", error);
+      const errObj = error as { message?: string };
+      throw new Error(errObj?.message || "Failed to communicate with Google Gemini API.");
+    }
+  }
+
+  throw new Error("No valid LLM API key provided.");
 }
 
 /**
- * Streams text responses from Claude API (Anthropic).
+ * Streams text responses from Claude API or Gemini API.
  * Yields individual text tokens as an AsyncGenerator.
  */
 export async function* streamLLMResponse(
   options: LLMStreamOptions
 ): AsyncGenerator<string, void, unknown> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) {
+  if (!anthropicKey && !geminiKey) {
     throw new Error(
-      "❌ Missing ANTHROPIC_API_KEY. Please add ANTHROPIC_API_KEY to your .env.local file."
+      "❌ Missing API Keys. Please add GEMINI_API_KEY or ANTHROPIC_API_KEY to your .env.local file."
     );
   }
 
-  const anthropic = new Anthropic({ apiKey });
-  const model = resolveModel(options.model);
+  // 1. Google Gemini Streaming Option
+  if (geminiKey) {
+    try {
+      const genAI = new GoogleGenerativeAI(geminiKey);
+      const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: options.systemPrompt,
+      });
 
-  try {
-    const stream = await anthropic.messages.create({
-      model,
-      max_tokens: options.maxTokens || 1024,
-      temperature: options.temperature ?? 0.7,
-      system: options.systemPrompt,
-      messages: options.messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      })),
-      stream: true,
-    });
+      const history = options.messages.slice(0, -1).map((msg) => ({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [
+          {
+            text:
+              typeof msg.content === "string"
+                ? msg.content
+                : JSON.stringify(msg.content),
+          },
+        ],
+      }));
 
-    for await (const chunk of stream) {
-      if (
-        chunk.type === "content_block_delta" &&
-        chunk.delta.type === "text_delta"
-      ) {
-        yield chunk.delta.text;
+      const lastMessage = options.messages[options.messages.length - 1];
+      const userPrompt =
+        typeof lastMessage?.content === "string"
+          ? lastMessage.content
+          : JSON.stringify(lastMessage?.content);
+
+      const chat = model.startChat({ history });
+      const result = await chat.sendMessageStream(userPrompt);
+
+      for await (const chunk of result.stream) {
+        yield chunk.text();
       }
+      return;
+    } catch (error: unknown) {
+      console.error("❌ Gemini Streaming Error:", error);
+      const errObj = error as { message?: string };
+      throw new Error(errObj?.message || "Error streaming response from Google Gemini API.");
     }
-  } catch (error: unknown) {
-    console.error("❌ Anthropic LLM Client Error (streamLLMResponse):", error);
-    const errObj = error as { status?: number; message?: string };
+  }
 
-    if (errObj?.status === 429) {
-      throw new Error("Rate limit exceeded on Claude API. Please wait a moment before trying again.");
-    } else if (errObj?.status === 401) {
-      throw new Error("Invalid ANTHROPIC_API_KEY. Please verify your API key.");
+  // 2. Anthropic Claude Streaming Option
+  if (anthropicKey) {
+    const anthropic = new Anthropic({ apiKey: anthropicKey });
+    const model = resolveModel(options.model);
+
+    try {
+      const stream = await anthropic.messages.create({
+        model,
+        max_tokens: options.maxTokens || 1024,
+        temperature: options.temperature ?? 0.7,
+        system: options.systemPrompt,
+        messages: options.messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+        stream: true,
+      });
+
+      for await (const chunk of stream) {
+        if (
+          chunk.type === "content_block_delta" &&
+          chunk.delta.type === "text_delta"
+        ) {
+          yield chunk.delta.text;
+        }
+      }
+      return;
+    } catch (error: unknown) {
+      console.error("❌ Anthropic Streaming Error:", error);
+      const errObj = error as { message?: string };
+      throw new Error(errObj?.message || "Error streaming response from Claude API.");
     }
-
-    throw new Error(errObj?.message || "An unexpected error occurred while communicating with Claude API.");
   }
 }
