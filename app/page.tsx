@@ -2,9 +2,9 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { getProjectsFromMarkdown } from "@/lib/content-loader";
 import ProjectCard from "@/components/ProjectCard";
+import ChatCTAButton from "@/components/ChatCTAButton";
 import {
   Sparkles,
-  MessageSquare,
   ArrowRight,
   Code2,
   Cpu,
@@ -47,23 +47,13 @@ export default function Home() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-md pt-xs w-full sm:w-auto">
-          {/* Primary CTA: Chat with Agent Ahmad */}
-          <button
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                window.dispatchEvent(new CustomEvent("open-agent-chat"));
-              }
-            }}
-            className="inline-flex items-center justify-center gap-sm px-xl py-md rounded-xl bg-primary text-surface font-body font-semibold hover:bg-primary-hover transition-all shadow-card hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none cursor-pointer min-h-[44px]"
-          >
-            <MessageSquare className="w-5 h-5" />
-            <span>Chat with Agent Ahmad</span>
-          </button>
+          {/* Primary CTA: Chat with Agent Ahmad (Client Component) */}
+          <ChatCTAButton />
 
           {/* Secondary CTA: View Projects */}
           <Link
             href="/projects"
-            className="inline-flex items-center justify-center gap-xs px-xl py-md rounded-xl bg-surface border border-neutralLight-border text-neutralDark font-body font-semibold hover:bg-neutralLight-card hover:border-primary-border hover:text-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+            className="inline-flex items-center justify-center gap-xs px-xl py-md rounded-xl bg-surface border border-neutralLight-border text-neutralDark font-body font-semibold hover:bg-neutralLight-card hover:border-primary-border hover:text-primary transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none min-h-[44px]"
           >
             <span>View Projects</span>
             <ArrowRight className="w-4 h-4" />
@@ -122,7 +112,7 @@ export default function Home() {
         <div className="pt-xs">
           <Link
             href="/resume"
-            className="inline-flex items-center gap-xs font-body text-sm font-semibold text-primary hover:underline"
+            className="inline-flex items-center gap-xs font-body text-sm font-semibold text-primary hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none rounded"
           >
             <FileText className="w-4 h-4" />
             <span>Read full resume & experience timeline &rarr;</span>
@@ -147,7 +137,7 @@ export default function Home() {
 
           <Link
             href="/projects"
-            className="inline-flex items-center gap-xs text-sm font-body font-semibold text-primary hover:text-primary-hover transition-colors shrink-0"
+            className="inline-flex items-center gap-xs text-sm font-body font-semibold text-primary hover:text-primary-hover transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary rounded"
           >
             <span>View All Projects</span>
             <ArrowRight className="w-4 h-4" />

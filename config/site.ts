@@ -10,7 +10,7 @@ export const siteConfig = {
   availableForWork: true,
   url: "https://agent-ahmad.vercel.app",
   socialLinks: {
-    github: "https://github.com/ahmad",
+    github: "https://github.com/ahmadshahdev",
     linkedin: "https://linkedin.com/in/ahmad",
     twitter: "https://twitter.com/ahmad_dev",
     email: "mailto:ahmad@example.com",
@@ -19,5 +19,6 @@ export const siteConfig = {
     { name: "Home", href: "/" },
     { name: "Projects", href: "/projects" },
     { name: "Resume", href: "/resume" },
+    { name: "Architecture", href: "/blog/how-i-built-this" },
   ],
 };
