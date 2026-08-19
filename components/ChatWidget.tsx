@@ -47,6 +47,30 @@ export default function ChatWidget() {
     }
   }, [isOpen, messages, isStreaming]);
 
+  // Keyboard shortcut (Escape to close) & External trigger event listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleOpenTrigger = () => {
+      setIsOpen(true);
+      if (!hasOpenedBefore) {
+        setHasOpenedBefore(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("open-agent-chat", handleOpenTrigger);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("open-agent-chat", handleOpenTrigger);
+    };
+  }, [isOpen, hasOpenedBefore]);
+
   const toggleChat = () => {
     setIsOpen((prev) => !prev);
     if (!hasOpenedBefore) {
@@ -86,7 +110,6 @@ export default function ChatWidget() {
     setIsStreaming(true);
 
     try {
-      // Prepare history payload (excluding initial welcome greeting if desired)
       const historyPayload = newHistory
         .filter((m) => m.id !== "welcome-1")
         .map((m) => ({
@@ -121,7 +144,6 @@ export default function ChatWidget() {
         }
       }
 
-      // Stream response tokens
       if (!res.body) {
         throw new Error("No response body received from server stream.");
       }
@@ -151,7 +173,6 @@ export default function ChatWidget() {
         );
       }
 
-      // Mark streaming as completed
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantMessageId
@@ -186,7 +207,7 @@ export default function ChatWidget() {
           {/* Subtle invitation chip */}
           <button
             onClick={toggleChat}
-            className="hidden md:flex items-center gap-2 bg-surface text-neutralDark border border-neutralLight-border px-3.5 py-2 rounded-full shadow-floating text-xs font-medium hover:border-primary transition-all duration-200 cursor-pointer animate-fade-in"
+            className="hidden md:flex items-center gap-2 bg-surface text-neutralDark border border-neutralLight-border px-4 py-2.5 rounded-full shadow-floating text-xs font-semibold hover:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none transition-all duration-200 cursor-pointer min-h-[44px]"
           >
             <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
             <span>Chat with Agent Ahmad</span>
@@ -194,10 +215,10 @@ export default function ChatWidget() {
 
           <button
             onClick={toggleChat}
-            aria-label="Open chat with Agent Ahmad"
-            className="bg-primary hover:bg-primary-hover text-white rounded-full p-4 shadow-floating shadow-agent-glow flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 group relative"
+            aria-label="Open chat with Agent Ahmad (Press Escape to close when open)"
+            className="bg-primary hover:bg-primary-hover text-white rounded-full p-4 shadow-floating shadow-agent-glow flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none min-w-[52px] min-h-[52px]"
           >
-            <Bot className="w-6 h-6 group-hover:rotate-12 transition-transform duration-200" />
+            <Bot className="w-6 h-6" />
             {/* Pulse Indicator */}
             <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-bright opacity-75"></span>
@@ -240,14 +261,16 @@ export default function ChatWidget() {
                 <button
                   onClick={handleClearChat}
                   title="Clear chat history"
-                  className="p-1.5 text-neutralLight-lightMuted hover:text-white hover:bg-neutralDark-hover rounded-lg transition-colors"
+                  aria-label="Clear chat history"
+                  className="p-2 text-neutralLight-lightMuted hover:text-white hover:bg-neutralDark-hover rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={toggleChat}
-                  title="Close chat"
-                  className="p-1.5 text-neutralLight-lightMuted hover:text-white hover:bg-neutralDark-hover rounded-lg transition-colors"
+                  title="Close chat window (Escape)"
+                  aria-label="Close chat window"
+                  className="p-2 text-neutralLight-lightMuted hover:text-white hover:bg-neutralDark-hover rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <Minimize2 className="w-4 h-4" />
                 </button>
@@ -266,7 +289,7 @@ export default function ChatWidget() {
                 />
               ))}
 
-              {/* Suggested Questions Chips (shown on first open / 1 message) */}
+              {/* Suggested Questions Chips */}
               {messages.length === 1 && !isStreaming && (
                 <div className="mt-4 pt-2">
                   <p className="text-xs font-semibold text-neutralLight-muted mb-2.5 flex items-center gap-1">
@@ -278,7 +301,7 @@ export default function ChatWidget() {
                       <button
                         key={idx}
                         onClick={() => sendMessage(q)}
-                        className="text-left text-xs bg-surface hover:bg-primary-light hover:text-primary text-neutralDark border border-neutralLight-border hover:border-primary-border rounded-xl px-3 py-2 transition-all duration-200 shadow-subtle active:scale-95 cursor-pointer"
+                        className="text-left text-xs bg-surface hover:bg-primary-light hover:text-primary text-neutralDark border border-neutralLight-border hover:border-primary-border rounded-xl px-3 py-2.5 transition-all duration-200 shadow-subtle active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary outline-none min-h-[44px] flex items-center"
                       >
                         {q}
                       </button>
@@ -310,14 +333,14 @@ export default function ChatWidget() {
                       : "Ask Agent Ahmad anything..."
                   }
                   disabled={isStreaming}
-                  className="flex-1 bg-neutralLight-card text-neutralDark text-sm rounded-xl px-3.5 py-2.5 border border-neutralLight-border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-light/50 disabled:opacity-60 transition-all"
+                  className="flex-1 bg-neutralLight-card text-neutralDark text-sm rounded-xl px-3.5 py-2.5 border border-neutralLight-border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-light/50 disabled:opacity-60 transition-all min-h-[44px]"
                 />
 
                 <button
                   type="submit"
                   disabled={!inputMessage.trim() || isStreaming}
                   aria-label="Send message"
-                  className="bg-primary hover:bg-primary-hover disabled:bg-neutralLight-border text-white p-2.5 rounded-xl shadow-subtle transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="bg-primary hover:bg-primary-hover disabled:bg-neutralLight-border text-white p-2.5 rounded-xl shadow-subtle transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center min-w-[44px] min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary outline-none"
                 >
                   {isStreaming ? (
                     <RefreshCw className="w-4 h-4 animate-spin text-white" />

@@ -40,7 +40,7 @@ export default function ResumePage() {
             href="/resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-xs px-lg py-md rounded-xl bg-primary text-surface font-body font-semibold hover:bg-primary-hover transition-all shadow-subtle hover:shadow-card-hover"
+            className="inline-flex items-center gap-xs px-lg py-md rounded-xl bg-primary text-surface font-body font-semibold hover:bg-primary-hover transition-all shadow-subtle hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none min-h-[44px]"
           >
             <Download className="w-4 h-4" />
             <span>Download PDF</span>

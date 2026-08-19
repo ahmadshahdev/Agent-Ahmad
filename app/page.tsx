@@ -48,13 +48,17 @@ export default function Home() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-md pt-xs w-full sm:w-auto">
           {/* Primary CTA: Chat with Agent Ahmad */}
-          <Link
-            href="#chat"
-            className="inline-flex items-center justify-center gap-sm px-xl py-md rounded-xl bg-primary text-surface font-body font-semibold hover:bg-primary-hover transition-all shadow-card hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          <button
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("open-agent-chat"));
+              }
+            }}
+            className="inline-flex items-center justify-center gap-sm px-xl py-md rounded-xl bg-primary text-surface font-body font-semibold hover:bg-primary-hover transition-all shadow-card hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none cursor-pointer min-h-[44px]"
           >
             <MessageSquare className="w-5 h-5" />
             <span>Chat with Agent Ahmad</span>
-          </Link>
+          </button>
 
           {/* Secondary CTA: View Projects */}
           <Link

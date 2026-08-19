@@ -65,7 +65,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-xs text-xs font-body font-semibold text-neutralDark hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded p-xs"
+              className="inline-flex items-center gap-xs text-xs font-body font-semibold text-neutralDark hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none rounded-lg p-xs min-h-[44px]"
               aria-label={`View ${project.title} on GitHub`}
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -82,7 +82,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-xs text-xs font-body font-semibold px-md py-sm rounded-lg bg-primary-light text-primary hover:bg-primary hover:text-surface transition-all border border-primary-border shadow-subtle group/btn"
+              className="inline-flex items-center gap-xs text-xs font-body font-semibold px-md py-sm rounded-lg bg-primary-light text-primary hover:bg-primary hover:text-surface transition-all border border-primary-border shadow-subtle group/btn focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none min-h-[44px]"
               aria-label={`Visit live demo for ${project.title}`}
             >
               <span>Live Demo</span>

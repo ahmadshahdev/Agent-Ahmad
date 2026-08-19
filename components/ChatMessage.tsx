@@ -2,7 +2,7 @@
 
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { Bot, User, BookOpen } from "lucide-react";
+import { Bot, User, BookOpen, Sparkles } from "lucide-react";
 
 export interface SourceCitation {
   id: string;
@@ -63,7 +63,7 @@ export default function ChatMessage({
         {isUser ? (
           <p className="whitespace-pre-wrap">{content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none text-neutralDark dark:text-neutralDark">
+          <div className="prose prose-sm max-w-none text-neutralDark">
             {content ? (
               <ReactMarkdown
                 components={{
@@ -103,11 +103,15 @@ export default function ChatMessage({
                 {content}
               </ReactMarkdown>
             ) : isStreaming ? (
-              <div className="flex items-center gap-1.5 py-1 text-neutralLight-muted text-xs">
-                <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-2 h-2 rounded-full bg-primary animate-bounce" />
-                <span className="ml-1 italic">Agent Ahmad is thinking...</span>
+              /* Skeleton Loading State for initial streaming */
+              <div className="space-y-2 py-1 min-w-[210px] animate-pulse">
+                <div className="flex items-center gap-1.5 text-neutralLight-muted text-xs font-medium mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary animate-spin" />
+                  <span>Agent Ahmad is gathering answer...</span>
+                </div>
+                <div className="h-3 bg-neutralLight-border/70 rounded w-full" />
+                <div className="h-3 bg-neutralLight-border/60 rounded w-4/5" />
+                <div className="h-3 bg-neutralLight-border/40 rounded w-3/5" />
               </div>
             ) : null}
 
