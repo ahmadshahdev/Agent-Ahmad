@@ -16,10 +16,8 @@ export const siteConfig = {
     email: "mailto:ahmad@example.com",
   },
   navLinks: [
-    { name: "About", href: "#about" },
-    { name: "Projects", href: "#projects" },
-    { name: "Skills", href: "#skills" },
-    { name: "Agent Chat", href: "#agent-chat" },
-    { name: "Contact", href: "#contact" },
+    { name: "Home", href: "/" },
+    { name: "Projects", href: "/projects" },
+    { name: "Resume", href: "/resume" },
   ],
 };
