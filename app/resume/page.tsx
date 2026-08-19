@@ -1,3 +1,4 @@
+import { getResumeFromMarkdown } from "@/lib/content-loader";
 import {
   Briefcase,
   GraduationCap,
@@ -9,103 +10,11 @@ import {
   FileCheck2,
 } from "lucide-react";
 
-
-export interface ExperienceItem {
-  id: string;
-  role: string;
-  company: string;
-  location: string;
-  period: string;
-  description: string[];
-  skills: string[];
-}
-
-export interface EducationItem {
-  id: string;
-  degree: string;
-  institution: string;
-  location: string;
-  period: string;
-  details: string;
-}
-
-export interface SkillGroup {
-  category: string;
-  skills: string[];
-}
-
-const EXPERIENCES: ExperienceItem[] = [
-  {
-    id: "exp-1",
-    role: "Senior Full-Stack & AI Engineer",
-    company: "Apex Tech Labs",
-    location: "Remote / San Francisco, CA",
-    period: "2023 — Present",
-    description: [
-      "Architected and deployed production RAG knowledge platforms using Next.js 14, LangChain, and vector databases, reducing document retrieval latency by 45%.",
-      "Led frontend architecture across 3 core SaaS products, establishing unified design system tokens with Tailwind CSS and TypeScript.",
-      "Mentored junior developers and instituted automated CI/CD unit and e2e testing workflows.",
-    ],
-    skills: ["Next.js 14", "TypeScript", "LangChain", "Vector Store", "Tailwind CSS", "Node.js"],
-  },
-  {
-    id: "exp-2",
-    role: "Full-Stack Software Engineer",
-    company: "CloudFlow Systems",
-    location: "Hybrid / New York, NY",
-    period: "2021 — 2023",
-    description: [
-      "Built high-concurrency microservices and real-time dashboard components consuming WebSockets and REST APIs.",
-      "Optimized SQL query performance and database indexing in PostgreSQL, lowering API p99 latency to under 120ms.",
-      "Engineered automated refactoring scripts and internal developer tools.",
-    ],
-    skills: ["React", "Node.js", "PostgreSQL", "Prisma", "Tailwind CSS", "Docker"],
-  },
-  {
-    id: "exp-3",
-    role: "Frontend Developer",
-    company: "Pixel Craft Studio",
-    location: "Remote",
-    period: "2020 — 2021",
-    description: [
-      "Developed pixel-perfect, accessible client web portals with strict WCAG AA compliance.",
-      "Collaborated closely with UX designers to build responsive UI component libraries.",
-    ],
-    skills: ["React", "JavaScript (ES6+)", "CSS3/HTML5", "Git", "REST APIs"],
-  },
-];
-
-const EDUCATION: EducationItem[] = [
-  {
-    id: "edu-1",
-    degree: "B.S. in Computer Science",
-    institution: "University of Technology",
-    location: "USA",
-    period: "2016 — 2020",
-    details: "Graduated with Honors. Focused on Distributed Systems, Data Structures & Software Engineering.",
-  },
-];
-
-const SKILL_GROUPS: SkillGroup[] = [
-  {
-    category: "Frontend Engineering",
-    skills: ["React 18", "Next.js 14 (App Router)", "TypeScript", "Tailwind CSS", "HTML5 & Semantic UI", "Zustand / Redux", "Framer Motion"],
-  },
-  {
-    category: "Backend & Databases",
-    skills: ["Node.js", "Express", "Python", "FastAPI", "PostgreSQL", "Prisma ORM", "Redis", "RESTful & GraphQL APIs"],
-  },
-  {
-    category: "AI & Vector Search",
-    skills: ["Retrieval-Augmented Generation (RAG)", "LangChain", "Vector Embeddings", "OpenAI / Anthropic APIs", "Prompt Engineering", "Guardrails"],
-  },
-  {
-    category: "DevOps & Workflows",
-    skills: ["Git & GitHub Actions", "Docker", "Vercel", "AWS Fundamentals", "Jest & Cypress", "Performance Optimization"],
-  },
-];
+export const revalidate = 60; // Refresh markdown content on updates
 
 export default function ResumePage() {
+  const { experiences, education, skillGroups } = getResumeFromMarkdown();
+
   return (
     <div className="space-y-3xl py-md">
       {/* Header Section */}
@@ -113,7 +22,7 @@ export default function ResumePage() {
         <div className="space-y-xs max-w-2xl">
           <div className="inline-flex items-center gap-xs px-sm py-1 rounded-full bg-primary-light border border-primary-border text-xs font-body font-semibold text-primary">
             <FileCheck2 className="w-3.5 h-3.5" />
-            <span>Professional Background</span>
+            <span>Professional Knowledge Base</span>
           </div>
 
           <h1 className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-neutralDark">
@@ -121,7 +30,7 @@ export default function ResumePage() {
           </h1>
 
           <p className="font-body text-base sm:text-lg text-neutralLight-muted">
-            Over 4 years of hands-on experience designing, shipping, and scaling modern web applications & AI agent systems.
+            Over 4 years of hands-on experience designing, shipping, and scaling modern web applications & AI agent systems. (Sourced from <code className="text-primary bg-primary-light/50 px-1 rounded">data/resume.md</code>).
           </p>
         </div>
 
@@ -150,14 +59,14 @@ export default function ResumePage() {
               Work Experience
             </h2>
             <p className="font-body text-sm text-neutralLight-muted">
-              Career history and key technical impacts
+              Career history and technical impacts
             </p>
           </div>
         </div>
 
         {/* Timeline List */}
         <div className="relative border-l-2 border-primary-border/60 ml-4 sm:ml-6 pl-md sm:pl-xl space-y-2xl">
-          {EXPERIENCES.map((exp) => (
+          {experiences.map((exp) => (
             <div key={exp.id} className="relative group">
               {/* Timeline Bullet Node */}
               <div className="absolute -left-[calc(1rem+9px)] sm:-left-[calc(1.5rem+9px)] top-1.5 w-4 h-4 rounded-full bg-surface border-2 border-primary group-hover:bg-primary transition-colors" />
@@ -186,7 +95,7 @@ export default function ResumePage() {
                   </div>
                 </div>
 
-                {/* Achievements List */}
+                {/* Highlights List */}
                 <ul className="space-y-xs">
                   {exp.description.map((item, index) => (
                     <li key={index} className="font-body text-sm text-neutralLight-muted flex items-start gap-xs">
@@ -197,16 +106,18 @@ export default function ResumePage() {
                 </ul>
 
                 {/* Tag Pills */}
-                <div className="flex flex-wrap gap-xs pt-xs">
-                  {exp.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="text-xs font-body font-medium px-sm py-0.5 rounded-md bg-primary-light/60 text-primary border border-primary-border/50"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                {exp.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-xs pt-xs">
+                    {exp.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="text-xs font-body font-medium px-sm py-0.5 rounded-md bg-primary-light/60 text-primary border border-primary-border/50"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -230,7 +141,7 @@ export default function ResumePage() {
         </div>
 
         <div className="relative border-l-2 border-primary-border/60 ml-4 sm:ml-6 pl-md sm:pl-xl">
-          {EDUCATION.map((edu) => (
+          {education.map((edu) => (
             <div key={edu.id} className="relative group">
               <div className="absolute -left-[calc(1rem+9px)] sm:-left-[calc(1.5rem+9px)] top-1.5 w-4 h-4 rounded-full bg-surface border-2 border-primary group-hover:bg-primary transition-colors" />
 
@@ -273,7 +184,7 @@ export default function ResumePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-lg">
-          {SKILL_GROUPS.map((group) => (
+          {skillGroups.map((group) => (
             <div
               key={group.category}
               className="bg-surface rounded-2xl border border-neutralLight-border p-lg shadow-subtle space-y-md hover:border-primary-border transition-colors"

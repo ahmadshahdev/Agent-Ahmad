@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { PROJECTS_DATA } from "@/data/projects";
+import { getProjectsFromMarkdown } from "@/lib/content-loader";
 import ProjectCard from "@/components/ProjectCard";
 import {
   Sparkles,
@@ -13,8 +13,11 @@ import {
   FileText,
 } from "lucide-react";
 
+export const revalidate = 60; // Refresh markdown content on updates
+
 export default function Home() {
-  const featuredProjects = PROJECTS_DATA.filter((p) => p.featured).slice(0, 3);
+  const projects = getProjectsFromMarkdown();
+  const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
 
   return (
     <div className="space-y-3xl py-md">
@@ -134,7 +137,7 @@ export default function Home() {
               Featured Projects
             </h2>
             <p className="font-body text-sm sm:text-base text-neutralLight-muted">
-              Highlights of recent full-stack applications and AI research builds.
+              Highlights of recent full-stack applications and AI research builds (parsed from <code className="text-primary bg-primary-light/50 px-1 rounded">data/projects.md</code>).
             </p>
           </div>
 
