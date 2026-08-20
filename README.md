@@ -1,6 +1,6 @@
 # Agent Ahmad — Interactive AI Portfolio & RAG Agent System
 
-> A modern, full-stack personal portfolio and interactive AI agent experience built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, **OpenAI Embeddings**, and **Anthropic Claude (Tool Calling)**.
+> A modern, full-stack personal portfolio and interactive AI agent experience built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, **Google Gemini Embeddings**, and **Google Gemini (Function Calling)**.
 
 ![Agent Ahmad Architecture](https://raw.githubusercontent.com/ahmadshahdev/Agent-Ahmad/main/public/og-image.png)
 
@@ -12,7 +12,7 @@
 
 ### Key Features
 - **🤖 Grounded AI Agent ("Agent Ahmad")**: Answers questions strictly based on Ahmad's knowledge base (`data/bio.md`, `data/projects.md`, `data/resume.md`).
-- **📚 Retrieval-Augmented Generation (RAG)**: Uses OpenAI `text-embedding-3-small` and in-memory cosine similarity search to inject relevant context into LLM prompts with source citations.
+- **📚 Retrieval-Augmented Generation (RAG)**: Uses Google Gemini `gemini-embedding-001` and in-memory cosine similarity search to inject relevant context into LLM prompts with source citations.
 - **⚡ Live Function Calling / Tool Execution**: Integrates server-side tools (e.g. `getLatestGithubActivity`) to fetch real-time public GitHub activity via REST API.
 - **🌊 Streaming Token UI**: Streams answers token-by-token using Next.js Web Streams (`ReadableStream`) with custom source citation tags (`X-Sources`).
 - **📱 Fully Responsive & Accessible**: Custom floating chat widget with full-screen overlay for mobile (375px+), keyboard shortcuts (`Escape` to close), and loading skeleton states.
@@ -29,7 +29,7 @@
 │                              │                                          │
 │                    chunkMarkdownSections()                              │
 │                              │                                          │
-│                OpenAI text-embedding-3-small                            │
+│                 Google Gemini gemini-embedding-001                      │
 │                              │                                          │
 │                [ vectorstore/store.json ]  <── Bundled in Repository    │
 └──────────────────────────────┬──────────────────────────────────────────┘
@@ -47,7 +47,7 @@
                                │
 ┌──────────────────────────────▼──────────────────────────────────────────┐
 │                    3. ORCHESTRATION & TOOL EXECUTION                    │
-│   Anthropic Claude API (claude-3-7-sonnet-20250219 / claude-sonnet-4-6) │
+│   Google Gemini API (gemini-2.5-flash / gemini-3.6-flash)               │
 │   Tools Passed: [ getLatestGithubActivity ]                             │
 │                              │                                          │
 │   ───► If Tool Call requested:                                         │
@@ -84,8 +84,8 @@
 | **Framework** | Next.js 14 (App Router) |
 | **Language** | TypeScript (Strict Mode) |
 | **Styling** | Tailwind CSS (Custom Color System & Tokens) |
-| **Embeddings** | OpenAI `text-embedding-3-small` |
-| **LLM Orchestration** | Anthropic `@anthropic-ai/sdk` (`claude-3-7-sonnet-20250219`) |
+| **Embeddings** | Google Gemini `gemini-embedding-001` |
+| **LLM Orchestration** | Google Gemini `@google/generative-ai` (`gemini-2.5-flash`) |
 | **Vector Engine** | Custom File-Backed Store (`vectorstore/store.json`) & Cosine Similarity |
 | **Icons & UI** | `lucide-react`, `react-markdown` |
 
@@ -110,23 +110,20 @@ Create a `.env.local` file in the root directory:
 cp .env.example .env.local
 ```
 
-Add your API keys to `.env.local`:
+Add your Gemini API key to `.env.local`:
 ```env
-# Required for vector embeddings generation
-OPENAI_API_KEY=sk-proj-your_openai_key
-
-# Required for Agent Ahmad Claude responses & tool calls
-ANTHROPIC_API_KEY=sk-ant-your_anthropic_key
+# Required for Gemini responses, function calling, & vector embeddings
+GEMINI_API_KEY=AIzaSy...
 
 # GitHub Username for live tool execution
 GITHUB_USERNAME=ahmadshahdev
 
 # Optional model override
-ANTHROPIC_MODEL=claude-3-7-sonnet-20250219
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### 3. Run Ingestion Script
-Parse Markdown knowledge sources in `data/` and generate embeddings:
+Parse Markdown knowledge sources in `data/` and generate embeddings using Gemini:
 ```bash
 npm run ingest
 ```
@@ -162,3 +159,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to interact 
 
 ## 📄 License
 Licensed under the [MIT License](LICENSE).
+

@@ -6,7 +6,7 @@ async function main() {
     await ingestKnowledgeBase();
     process.exit(0);
   } catch (error: any) {
-    if (error.message !== "Missing OPENAI_API_KEY") {
+    if (error.message !== "Missing GEMINI_API_KEY") {
       console.error("\n❌ Ingestion failed with error:", error);
     }
     process.exit(1);

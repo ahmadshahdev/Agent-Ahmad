@@ -1,11 +1,11 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import { searchVectorStore, loadVectorStore, SearchResult } from "../embeddings/store";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
-const EMBEDDING_MODEL = "text-embedding-3-small";
+const EMBEDDING_MODELS = ["gemini-embedding-001", "gemini-embedding-2"];
 
 export interface RetrievedChunk {
   id: string;
@@ -129,31 +129,32 @@ export async function retrieveContext(
     return [];
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  if (apiKey) {
-    try {
-      const openai = new OpenAI({ apiKey });
-      const response = await openai.embeddings.create({
-        model: EMBEDDING_MODEL,
-        input: query.trim(),
-      });
+  if (apiKey && apiKey.trim()) {
+    const genAI = new GoogleGenerativeAI(apiKey.trim());
 
-      const queryEmbedding = response.data[0].embedding;
-      const results: SearchResult[] = searchVectorStore(queryEmbedding, topK);
+    for (const modelName of EMBEDDING_MODELS) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const res = await model.embedContent(query.trim());
+        const queryEmbedding = res.embedding.values;
 
-      return results.map((res) => ({
-        id: res.id,
-        content: res.content,
-        sourceFile: res.sourceFile,
-        sectionTitle: res.sectionTitle,
-        score: Math.round(res.score * 1000) / 1000,
-      }));
-    } catch (err: unknown) {
-      console.warn("⚠️ OpenAI Embedding failed (quota/key issue). Using keyword retrieval fallback:", err);
+        const results: SearchResult[] = searchVectorStore(queryEmbedding, topK);
+
+        return results.map((res) => ({
+          id: res.id,
+          content: res.content,
+          sourceFile: res.sourceFile,
+          sectionTitle: res.sectionTitle,
+          score: Math.round(res.score * 1000) / 1000,
+        }));
+      } catch (err: unknown) {
+        console.warn(`⚠️ Gemini Embedding query failed on model '${modelName}':`, err);
+      }
     }
   }
 
-  // Fallback to text matching if OpenAI key missing or failed
+  // Fallback to text matching if Gemini key missing or failed
   return fallbackTextSearch(query, topK);
 }

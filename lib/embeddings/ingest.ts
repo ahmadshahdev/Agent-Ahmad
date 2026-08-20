@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import { chunkMarkdown, MarkdownChunk } from "./chunk";
 import { saveVectorStore, VectorRecord } from "./store";
@@ -9,24 +9,24 @@ import { saveVectorStore, VectorRecord } from "./store";
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
-const EMBEDDING_MODEL = "text-embedding-3-small";
+const EMBEDDING_MODELS = ["gemini-embedding-001", "gemini-embedding-2"];
 
 export async function ingestKnowledgeBase(): Promise<{
   fileCount: number;
   chunkCount: number;
 }> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) {
+  if (!apiKey || !apiKey.trim()) {
     console.error(
-      "\n❌ ERROR: OPENAI_API_KEY environment variable is not set.\n" +
+      "\n❌ ERROR: GEMINI_API_KEY environment variable is not set.\n" +
         "Please create a .env.local file in the project root containing:\n" +
-        "OPENAI_API_KEY=your_openai_api_key_here\n"
+        "GEMINI_API_KEY=your_gemini_api_key_here\n"
     );
-    throw new Error("Missing OPENAI_API_KEY");
+    throw new Error("Missing GEMINI_API_KEY");
   }
 
-  const openai = new OpenAI({ apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey.trim());
 
   const dataDir = path.join(process.cwd(), "data");
   if (!fs.existsSync(dataDir)) {
@@ -56,27 +56,44 @@ export async function ingestKnowledgeBase(): Promise<{
   }
 
   console.log(`\n✂️ Chunked into ${allChunks.length} sections (~300-500 tokens each).`);
-  console.log(`🧠 Generating embeddings using '${EMBEDDING_MODEL}'...`);
 
-  // Batch generate embeddings via OpenAI API
-  const inputs = allChunks.map((c) => c.content);
+  let embeddings: number[][] = [];
+  let successModel = "";
 
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
-    input: inputs,
-  });
+  for (const modelName of EMBEDDING_MODELS) {
+    try {
+      console.log(`🧠 Generating embeddings using Google Gemini '${modelName}'...`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+
+      const batchResult = await model.batchEmbedContents({
+        requests: allChunks.map((c) => ({
+          content: { role: "user", parts: [{ text: c.content }] },
+        })),
+      });
+
+      embeddings = batchResult.embeddings.map((e) => e.values);
+      successModel = modelName;
+      break;
+    } catch (err) {
+      console.warn(`⚠️ Batch embedding failed on model '${modelName}', trying candidate fallback:`, err);
+    }
+  }
+
+  if (embeddings.length === 0) {
+    throw new Error("Failed to generate embeddings using Google Gemini API across candidate models.");
+  }
 
   const vectorRecords: VectorRecord[] = allChunks.map((chunk, index) => ({
     id: chunk.id,
     sourceFile: chunk.sourceFile,
     sectionTitle: chunk.sectionTitle,
     content: chunk.content,
-    embedding: response.data[index].embedding,
+    embedding: embeddings[index],
   }));
 
   saveVectorStore(vectorRecords);
 
-  console.log(`\n✅ Ingestion Complete!`);
+  console.log(`\n✅ Ingestion Complete using '${successModel}'!`);
   console.log(
     `📊 Ingested ${allChunks.length} chunks from ${files.length} files into vectorstore/`
   );

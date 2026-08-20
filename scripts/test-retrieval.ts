@@ -19,7 +19,7 @@ async function test() {
       console.log(`Content:\n${chunk.content}\n`);
     });
   } catch (error: any) {
-    if (error.message !== "Missing OPENAI_API_KEY") {
+    if (error.message !== "Missing GEMINI_API_KEY") {
       console.error("❌ Retrieval test error:", error);
     }
   }
