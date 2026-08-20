@@ -10,7 +10,7 @@ status: "Available for Hire"
 ## Background & Overview
 Ahmad is a dedicated Full-Stack Engineer and AI Systems Developer with a deep passion for building scalable, high-performance web applications and intelligent software agents. Over the past 4+ years, he has designed and shipped production systems spanning complex frontends, microservices, and vector retrieval pipelines.
 
-He holds a degree in [PLACEHOLDER: Computer Science / Software Engineering] and has worked with teams ranging from early-stage AI startups to established technology organizations. Ahmad specializes in modern JavaScript/TypeScript ecosystems—notably Next.js, React, Node.js—alongside Python-based machine learning tooling such as LangChain, vector databases, and Retrieval-Augmented Generation (RAG) frameworks.
+He holds a degree in Computer Science and has worked with teams ranging from early-stage AI startups to established technology organizations. Ahmad specializes in modern JavaScript/TypeScript ecosystems—notably Next.js, React, Node.js—alongside Python-based machine learning tooling such as LangChain, vector databases, and Retrieval-Augmented Generation (RAG) frameworks.
 
 ## Technical Philosophy & Engineering Approach
 Ahmad believes that great software balances rapid innovation with robust software engineering principles. He emphasizes:

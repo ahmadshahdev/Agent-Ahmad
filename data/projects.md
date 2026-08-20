@@ -93,7 +93,7 @@ Over 1,200 npm downloads; enables developers to generate pull-request summaries 
 - **Category**: AI & ML
 - **Featured**: false
 - **Tech Stack**: React, Web Audio API, Python, FastAPI, Tailwind CSS
-- **GitHub**: https://github.com/ahmadshahdev/synth-voice
+- **GitHub**: [ https://github.com/ahmadshahdev/synth-voice]
 - **Live Demo**: https://synth-voice.example.com
 
 ### Description
@@ -113,7 +113,7 @@ Delivered real-time web audio rendering in the browser with low-latency streamin
 - **Category**: Full-Stack
 - **Featured**: false
 - **Tech Stack**: Next.js, TypeScript, Tailwind CSS, CRDTs, Zustand
-- **GitHub**: https://github.com/ahmadshahdev/flow-kanban
+- **GitHub**: [https://github.com/ahmadshahdev/flow-kanban]
 - **Live Demo**: https://flow-kanban.example.com
 
 ### Description

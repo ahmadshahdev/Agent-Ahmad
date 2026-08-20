@@ -41,15 +41,15 @@ Yes! I have built multi-turn RAG knowledge engines with vector embeddings, seman
 ---
 
 ## Where are you located, and what time zones can you work in?
-I am based in [PLACEHOLDER: Timezone / City, e.g. UTC+5 / New York / Remote] and comfortable working asynchronously or overlapping with US, European, and Asian team hours.
+I am based in Kohat, Pakistan and comfortable working asynchronously or overlapping with US, European, and Asian team hours.
 
 ---
 
 ## How can someone get in touch or hire you?
 You can reach me directly via:
-- **Email**: [PLACEHOLDER: ahmad@example.com]
-- **GitHub**: [PLACEHOLDER: https://github.com/ahmadshahdev]
-- **LinkedIn**: [PLACEHOLDER: https://linkedin.com/in/ahmad]
+- **Email**: [dev.ahmadshah@gmail.com]
+- **GitHub**: [https://github.com/ahmadshahdev]
+- **LinkedIn**: [https://www.linkedin.com/in/syed-ahmad-shah-dev/]
 - Or by using the interactive "Agent Ahmad" chat widget on this site!
 
 ---

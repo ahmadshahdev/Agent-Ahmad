@@ -2,7 +2,7 @@
 
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { Bot, User, BookOpen, Sparkles } from "lucide-react";
+import { Bot, User, Sparkles } from "lucide-react";
 
 export interface SourceCitation {
   id: string;
@@ -29,7 +29,6 @@ export interface ChatMessageProps {
 export default function ChatMessage({
   role,
   content,
-  sources = [],
   isStreaming = false,
 }: ChatMessageProps) {
   const isUser = role === "user";
@@ -119,25 +118,6 @@ export default function ChatMessage({
             {isStreaming && content && (
               <span className="inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse align-middle" />
             )}
-          </div>
-        )}
-
-        {/* Source Citations Tag */}
-        {!isUser && sources && sources.length > 0 && (
-          <div className="mt-3 pt-2.5 border-t border-neutralLight-border/70 flex flex-wrap items-center gap-1.5 text-[11px] text-neutralLight-muted">
-            <span className="flex items-center gap-1 font-semibold text-primary">
-              <BookOpen className="w-3 h-3" />
-              Sources:
-            </span>
-            {sources.map((src, idx) => (
-              <span
-                key={src.id || idx}
-                className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary-light text-primary font-medium text-[10px] border border-primary-border/40"
-                title={`Relevance score: ${src.score}`}
-              >
-                {src.sourceFile.replace(/\.md$/, "")} → {src.sectionTitle}
-              </span>
-            ))}
           </div>
         )}
       </div>

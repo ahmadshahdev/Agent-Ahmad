@@ -30,12 +30,11 @@ export default function ChatWidget() {
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([INITIAL_WELCOME_MESSAGE]);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [hasOpenedBefore, setHasOpenedBefore] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to bottom of chat
+  // Auto-scroll to bottom of chat & focus input on open
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -43,23 +42,23 @@ export default function ChatWidget() {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
-      inputRef.current?.focus();
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, messages, isStreaming]);
 
   // Keyboard shortcut (Escape to close) & External trigger event listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape") {
         setIsOpen(false);
       }
     };
 
     const handleOpenTrigger = () => {
       setIsOpen(true);
-      if (!hasOpenedBefore) {
-        setHasOpenedBefore(true);
-      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -69,13 +68,10 @@ export default function ChatWidget() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("open-agent-chat", handleOpenTrigger);
     };
-  }, [isOpen, hasOpenedBefore]);
+  }, []);
 
   const toggleChat = () => {
     setIsOpen((prev) => !prev);
-    if (!hasOpenedBefore) {
-      setHasOpenedBefore(true);
-    }
   };
 
   const handleClearChat = () => {
@@ -219,7 +215,7 @@ export default function ChatWidget() {
           <button
             onClick={toggleChat}
             aria-label="Open chat with Agent Ahmad (Press Escape to close when open)"
-            className="bg-primary hover:bg-primary-hover text-white rounded-full p-4 shadow-floating shadow-agent-glow flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none min-w-[52px] min-h-[52px]"
+            className="bg-primary hover:bg-primary-hover text-white rounded-full p-4 shadow-agent-glow flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none min-w-[52px] min-h-[52px]"
           >
             <Bot className="w-6 h-6" />
             {/* Pulse Indicator */}
