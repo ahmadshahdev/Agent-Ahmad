@@ -1,8 +1,8 @@
 ---
 name: "Ahmad"
 title: "Senior Full-Stack & AI Engineer"
-email: "[PLACEHOLDER: ahmad@example.com]"
-location: "[PLACEHOLDER: Remote / San Francisco, CA]"
+email: "dev.ahmadshah@gmail.com"
+location: "Kohat, Pakistan"
 summary: "Senior Full-Stack & AI Engineer with 4+ years of experience shipping production Next.js, TypeScript, and RAG systems."
 ---
 

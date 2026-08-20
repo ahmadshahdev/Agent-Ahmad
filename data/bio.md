@@ -1,7 +1,7 @@
 ---
 name: "Ahmad"
 title: "Full-Stack Engineer & AI Systems Specialist"
-location: "[PLACEHOLDER: City, Country]"
+location: "Kohat, Pakistan"
 status: "Available for Hire"
 ---
 
@@ -23,6 +23,6 @@ Colleagues and partners describe Ahmad as an analytical problem-solver who thriv
 
 ## Contact & Availability
 Ahmad is currently open to full-time remote engineering roles, contract advisory work, and AI integration projects.
-- **Email**: [PLACEHOLDER: ahmad@example.com]
-- **GitHub**: [PLACEHOLDER: https://github.com/ahmadshahdev]
-- **LinkedIn**: [PLACEHOLDER: https://linkedin.com/in/ahmad]
+- **Email**: [dev.ahmadshah@gmail.com]
+- **GitHub**: [https://github.com/ahmadshahdev]
+- **LinkedIn**: [https://www.linkedin.com/in/syed-ahmad-shah-dev/]
