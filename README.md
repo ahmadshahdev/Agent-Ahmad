@@ -157,6 +157,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to interact 
 
 ---
 
-## 📄 License
-Licensed under the [MIT License](LICENSE).
 
