@@ -107,6 +107,9 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-md flex flex-col sm:flex-row items-center justify-between gap-sm text-xs font-body text-neutralLight-muted">
           <p>© {currentYear} {siteConfig.name}. All rights reserved.</p>
+          <span className="font-bold text-red-600 text-xs px-2.5 py-0.5 bg-red-50 border border-red-200 rounded-full inline-flex items-center gap-1">
+            ⚠️ Notice: Contains Dummy Data
+          </span>
           <p className="flex items-center gap-1">
             Built with Next.js 14, Tailwind CSS & AI
           </p>
