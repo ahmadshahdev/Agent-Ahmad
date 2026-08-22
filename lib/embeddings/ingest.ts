@@ -3,7 +3,7 @@ import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import { chunkMarkdown, MarkdownChunk } from "./chunk";
-import { saveVectorStore, VectorRecord } from "./store";
+
 
 // DEPRECATED: Persistent store import (kept for comparison)
 // import { saveVectorStore, VectorRecord } from "./store";
