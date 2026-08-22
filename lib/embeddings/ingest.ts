@@ -5,11 +5,25 @@ import dotenv from "dotenv";
 import { chunkMarkdown, MarkdownChunk } from "./chunk";
 import { saveVectorStore, VectorRecord } from "./store";
 
+// DEPRECATED: Persistent store import (kept for comparison)
+// import { saveVectorStore, VectorRecord } from "./store";
+
 // Load environment variables from .env / .env.local
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 const EMBEDDING_MODELS = ["gemini-embedding-001", "gemini-embedding-2"];
+
+export interface StoredEmbeddingChunk {
+  id: string;
+  text: string;
+  source: string;
+  section: string;
+  content: string;
+  sourceFile: string;
+  sectionTitle: string;
+  embedding: number[];
+}
 
 export async function ingestKnowledgeBase(): Promise<{
   fileCount: number;
@@ -83,20 +97,41 @@ export async function ingestKnowledgeBase(): Promise<{
     throw new Error("Failed to generate embeddings using Google Gemini API across candidate models.");
   }
 
-  const vectorRecords: VectorRecord[] = allChunks.map((chunk, index) => ({
+  // Build entries for data/embeddings.json
+  const embeddingRecords: StoredEmbeddingChunk[] = allChunks.map((chunk, index) => ({
     id: chunk.id,
+    text: chunk.content,
+    source: chunk.sourceFile,
+    section: chunk.sectionTitle,
+    content: chunk.content,
     sourceFile: chunk.sourceFile,
     sectionTitle: chunk.sectionTitle,
-    content: chunk.content,
     embedding: embeddings[index],
   }));
 
-  saveVectorStore(vectorRecords);
+  // DEPRECATED: Previously written to persistent vector store
+  // const vectorRecords: VectorRecord[] = allChunks.map((chunk, index) => ({
+  //   id: chunk.id,
+  //   sourceFile: chunk.sourceFile,
+  //   sectionTitle: chunk.sectionTitle,
+  //   content: chunk.content,
+  //   embedding: embeddings[index],
+  // }));
+  // saveVectorStore(vectorRecords);
 
-  console.log(`\n✅ Ingestion Complete using '${successModel}'!`);
-  console.log(
-    `📊 Ingested ${allChunks.length} chunks from ${files.length} files into vectorstore/`
-  );
+  const outputPath = path.join(dataDir, "embeddings.json");
+
+  try {
+    fs.writeFileSync(outputPath, JSON.stringify(embeddingRecords, null, 2), "utf8");
+    console.log(`\n✅ Ingestion Complete using '${successModel}'!`);
+    console.log(
+      `📊 Successfully wrote ${embeddingRecords.length} chunks from ${files.length} files to ${outputPath}`
+    );
+  } catch (error) {
+    console.error(`❌ ERROR: Failed to write embeddings file to ${outputPath}:`, error);
+    process.exit(1);
+  }
 
   return { fileCount: files.length, chunkCount: allChunks.length };
 }
+
