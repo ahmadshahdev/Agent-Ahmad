@@ -1,6 +1,5 @@
 ## Live Link:
-- agent-ahmad.vercel.app
-
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://agent-ahmad.vercel.app)
 ---
 
 
@@ -8,7 +7,7 @@
 
 > A modern, full-stack personal portfolio and interactive AI agent experience built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, **Google Gemini Embeddings**, and **Google Gemini (Function Calling)**.
 
-![Agent Ahmad Architecture](https://raw.githubusercontent.com/ahmadshahdev/Agent-Ahmad/main/public/og-image.png)
+
 
 ---
 
