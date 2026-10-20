@@ -1,3 +1,9 @@
+## Live Link:
+- agent-ahmad.vercel.app
+
+---
+
+
 # Agent Ahmad — Interactive AI Portfolio & RAG Agent System
 
 > A modern, full-stack personal portfolio and interactive AI agent experience built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, **Google Gemini Embeddings**, and **Google Gemini (Function Calling)**.
