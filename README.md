@@ -1,7 +1,5 @@
 ## Live Link:
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://agent-ahmad.vercel.app)
----
-
+- <a href="https://agent-ahmad.vercel.app" target="_blank">agent-ahmad.vercel.app</a>
 
 # Agent Ahmad — Interactive AI Portfolio & RAG Agent System
 
